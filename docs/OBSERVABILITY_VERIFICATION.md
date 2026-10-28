@@ -21,3 +21,7 @@ Expected: a JSON PASS result printed after rules and dashboard become queryable.
 The overlay uses a local-only demo password and anonymous viewer permissions. **Never expose it to the public Internet.**
 
 CI rule-provisioning success does not prove on-call notifications, live SLA monitoring, distributed tracing, Grafana dashboards on real external data, or production security.
+
+## Verified CI result
+
+[Docker integration run #40657460536](https://github.com/harshakavali81-collab/Real-Time-Streaming-Anomaly-Detection/actions/runs/40657460536) completed successfully on 28 October 2026, returning PASS with Prometheus rule group loaded, Grafana database OK and a discoverable StreamWatch AI dashboard. This was an ephemeral local synthetic Docker environment, not a publicly hosted monitoring deployment.

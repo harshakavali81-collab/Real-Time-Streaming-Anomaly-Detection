@@ -232,3 +232,9 @@ CLI retention controls and the optional Grafana stack must be verified in the ta
 - [Threat model](docs/THREAT_MODEL.md) — key trust boundaries and release security gaps.
 - [Staging/production deployment blueprint](docs/DEPLOYMENT_BLUEPRINT.md) — explicit implementation/verification gates, **not** a claim of deployment.
 - [Recruiter demonstration checklist](docs/DEMO_CHECKLIST.md) — a practical, source-linked walkthrough.
+
+### Verified end-to-end release evidence — 28 October 2026
+
+- **37 Python tests passed (1 warning)** in the [quality-and-build workflow](https://github.com/harshakavali81-collab/Real-Time-Streaming-Anomaly-Detection/actions/runs/40657460369).
+- **Full Kafka/SQL/API and optional Grafana/Prometheus verification passed** in the [Docker integration workflow](https://github.com/harshakavali81-collab/Real-Time-Streaming-Anomaly-Detection/actions/runs/40657460536).
+- Grafana API health reported OK and its provisioned StreamWatch dashboard was discoverable. The loaded local Prometheus alert group was verified. No external alerts, public production deployment or real-source model evaluation are claimed.

@@ -52,4 +52,15 @@ Source references: [benchmark code](../scripts/benchmark.py), [tests](../tests),
 
 This confirms a finite integration smoke under a simulated payload distribution. It does **not** establish high availability, sustained Kafka throughput or validated accuracy on real service incidents.
 
-Later commits change DLQ privacy format and add optional Grafana; those changes require their own workflow verification rather than inheriting the earlier run's status.
+Later privacy controls, retention tools and optional Grafana integration were independently verified in new GitHub workflow runs described below.
+
+
+## Final extended-release CI verification
+
+Successful GitHub Actions runs on **28 October 2026** at source revision 6a03a54a4e4cdbe080569ee85d57d270b99f5cbb:
+
+- [quality-and-build #40657460369](https://github.com/harshakavali81-collab/Real-Time-Streaming-Anomaly-Detection/actions/runs/40657460369) — 37 Python tests passed (1 warning), offline demo, benchmark, Docker Compose base/observability configuration validation, Grafana JSON parsing and React build.
+- [docker-streaming-integration #40657460536](https://github.com/harshakavali81-collab/Real-Time-Streaming-Anomaly-Detection/actions/runs/40657460536) — real ephemeral Redpanda Kafka producer/consumer, PostgreSQL, FastAPI, duplicate persistence handling, metadata-only DLQ, authenticated triage and SQL audit.
+- The same integration run started **optional Grafana** and verified Prometheus rule group loading, Grafana database health and the searchable provisioned StreamWatch dashboard.
+
+These are independently rerunnable *synthetic environment engineering checks*. They do not certify any real-world anomaly accuracy, sustained peak Kafka throughput, public availability, operational alert delivery or production security.
