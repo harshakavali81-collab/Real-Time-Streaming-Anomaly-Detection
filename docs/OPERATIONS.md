@@ -59,3 +59,5 @@ The current API GET routes are not behind a complete tenant identity system. A r
 ## Remaining release requirements
 
 Independent sustained streaming load tests, real source permissions, public cloud hosting, HTTPS, Kafka ACLs, distributed state, production-grade observability, domain validation of model predictions, incident drills and documented human operations have not been completed.
+
+The integration workflow additionally verifies Prometheus rule loading and Grafana dashboard provisioning through a black-box check. See [observability verification](OBSERVABILITY_VERIFICATION.md).
