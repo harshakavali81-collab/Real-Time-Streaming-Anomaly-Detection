@@ -13,7 +13,7 @@
 ![License](https://img.shields.io/badge/License-MIT-70ddbd)
 ![Data](https://img.shields.io/badge/Data-seeded%20synthetic-f2ba78)
 
-[Architecture](docs/ARCHITECTURE.md) · [Visual gallery](docs/VISUAL_GALLERY.md) · [Model card](docs/MODEL_CARD.md) · [Runbook](docs/RUNBOOK.md) · [Portfolio case study](docs/PORTFOLIO_CASE_STUDY.md)
+[Architecture](docs/ARCHITECTURE.md) · [Visual gallery](docs/VISUAL_GALLERY.md) · [Model card](docs/MODEL_CARD.md) · [Verified CI & measured offline benchmark](docs/CI_EVIDENCE.md) · · [Runbook](docs/RUNBOOK.md) · [Portfolio case study](docs/PORTFOLIO_CASE_STUDY.md)
 
 </div>
 
