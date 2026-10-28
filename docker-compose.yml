@@ -30,7 +30,7 @@ services:
     command: uvicorn backend.app.main:app --host 0.0.0.0 --port 8000
     environment:
       DATABASE_URL: postgresql+psycopg://streamwatch:local_dev_only@postgres:5432/streamwatch
-      API_TOKEN: \${API_TOKEN:-}
+      API_TOKEN: ${API_TOKEN:-}
     ports: ["127.0.0.1:8000:8000"]
     depends_on:
       postgres: {condition: service_healthy}
@@ -52,8 +52,8 @@ services:
     environment:
       KAFKA_BOOTSTRAP: redpanda:9092
       KAFKA_TOPIC: telemetry.events.v1
-      EVENTS_PER_SECOND: \${EVENTS_PER_SECOND:-5}
-      SIMULATED_ANOMALY_RATE: \${SIMULATED_ANOMALY_RATE:-0.08}
+      EVENTS_PER_SECOND: ${EVENTS_PER_SECOND:-5}
+      SIMULATED_ANOMALY_RATE: ${SIMULATED_ANOMALY_RATE:-0.08}
     depends_on:
       redpanda: {condition: service_started}
   frontend:
