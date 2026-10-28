@@ -43,6 +43,20 @@ class OnlineDetector:
         self.threshold = threshold
         self.profiles: dict[str, ServiceProfile] = {}
 
+    def restore_observation(self, service: str, values: list[float], anomaly: bool) -> None:
+        """Rehydrate a previously persisted decision without scoring it again.
+
+        The DB is authoritative; rejected/duplicate messages never become training rows.
+        Single consumer worker per service is required for consistent state.
+        """
+        profile = self.profiles.setdefault(service, ServiceProfile())
+        if len(values) != 4:
+            raise ValueError("expected four versioned features")
+        if not anomaly:
+            for stat, value in zip(profile.stats, values):
+                stat.observe(value)
+        profile.observed += 1
+
     def score(self, event: TelemetryEvent) -> Detection:
         profile = self.profiles.setdefault(event.service, ServiceProfile())
         values = to_vector(event)

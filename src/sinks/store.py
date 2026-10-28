@@ -3,10 +3,11 @@ import os
 import time
 from collections import defaultdict
 from datetime import datetime, timezone
-from sqlalchemy import Boolean, Float, Index, Integer, JSON, String, create_engine, select, func
+from math import log1p
+from sqlalchemy import Boolean, Float, Index, Integer, JSON, String, create_engine, select, update, func
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, sessionmaker
 from src.schema import TelemetryEvent
-from src.models.detector import Detection
+from src.models.detector import Detection, OnlineDetector
 from src.alerts.rules import severity
 
 class Base(DeclarativeBase):
@@ -29,6 +30,17 @@ class EventRow(Base):
     source: Mapped[str] = mapped_column(String(20), nullable=False)
     processing_ms: Mapped[float] = mapped_column(Float, nullable=False)
     e2e_latency_ms: Mapped[float] = mapped_column(Float, nullable=False)
+
+class AuditRow(Base):
+    """Persistent audit of state changes; actor is a token class, not user identity."""
+    __tablename__ = "investigation_audit"
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    event_id: Mapped[str] = mapped_column(String(80), nullable=False, index=True)
+    previous_status: Mapped[str] = mapped_column(String(16), nullable=False)
+    new_status: Mapped[str] = mapped_column(String(16), nullable=False)
+    actor: Mapped[str] = mapped_column(String(32), nullable=False)
+    changed_ts: Mapped[float] = mapped_column(Float, nullable=False)
+
 
 Index("ix_events_stored_ts", EventRow.stored_ts)
 Index("ix_events_triage", EventRow.anomaly, EventRow.status, EventRow.stored_ts)
@@ -76,25 +88,68 @@ class Store:
             session.add(row)
         return True
 
-    def list_events(self, limit: int = 100, anomaly_only: bool = False, status: str | None = None) -> list[dict]:
+    def record_processing_latency(self, event_id: str, elapsed_ms: float) -> None:
+        """Record scoring + initial SQL commit elapsed time, excluding this update."""
+        with self.Session.begin() as session:
+            session.execute(update(EventRow).where(EventRow.event_id == event_id).values(processing_ms=elapsed_ms))
+
+    def restore_detector(self, detector: OnlineDetector) -> int:
+        """Replay persisted *decisions* to restore online baselines after worker restart.
+
+        Storage remains the only source of truth. Restore is O(history) at startup,
+        intended for local demos; production needs checkpointed state and retention.
+        """
+        restored = 0
+        statement = (select(EventRow)
+                     .where(EventRow.model == "online-zscore-v1")
+                     .order_by(EventRow.stored_ts.asc(), EventRow.event_id.asc()))
+        with self.Session() as session:
+            for row in session.scalars(statement).yield_per(200):
+                f = row.features
+                vector = [log1p(f["latency_ms"]), f["cpu_pct"] / 100.0,
+                          f["error_rate"], log1p(f["rps"])]
+                detector.restore_observation(row.service, vector, row.anomaly)
+                restored += 1
+        return restored
+
+    def list_events(self, limit: int = 100, anomaly_only: bool = False,
+                    status: str | None = None, service: str | None = None,
+                    offset: int = 0) -> list[dict]:
         statement = select(EventRow)
         if anomaly_only:
             statement = statement.where(EventRow.anomaly.is_(True))
         if status:
             statement = statement.where(EventRow.status == status)
-        statement = statement.order_by(EventRow.stored_ts.desc()).limit(limit)
+        if service:
+            statement = statement.where(EventRow.service == service)
+        statement = statement.order_by(EventRow.stored_ts.desc(), EventRow.event_id.desc()).offset(offset).limit(limit)
         with self.Session() as session:
             return [public_row(row) for row in session.scalars(statement)]
 
-    def update_status(self, event_id: str, status: str) -> dict | None:
+    def update_status(self, event_id: str, status: str, actor: str = 'local-demo') -> dict | None:
         with self.Session.begin() as session:
             row = session.get(EventRow, event_id)
             if row is None or not row.anomaly:
                 return None
-            row.status = status
+            if row.status != status:
+                session.add(AuditRow(event_id=event_id, previous_status=row.status,
+                                     new_status=status, actor=actor,
+                                     changed_ts=time.time()))
+                row.status = status
             session.flush()
             result = public_row(row)
         return result
+
+    def audit_history(self, event_id: str, limit: int = 100) -> list[dict]:
+        with self.Session() as session:
+            entries = session.scalars(
+                select(AuditRow).where(AuditRow.event_id == event_id)
+                .order_by(AuditRow.id.desc()).limit(limit))
+            return [{"id": a.id, "event_id": a.event_id,
+                     "previous_status": a.previous_status,
+                     "new_status": a.new_status, "actor": a.actor,
+                     "changed_at": datetime.fromtimestamp(a.changed_ts, timezone.utc).isoformat()}
+                    for a in entries]
 
     def summary(self, window_minutes: int = 60) -> dict:
         since = time.time() - window_minutes * 60

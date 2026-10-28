@@ -30,6 +30,8 @@ def run() -> None:
         warmup=int(os.getenv("WARMUP_EVENTS", "25")),
         threshold=float(os.getenv("ANOMALY_THRESHOLD", "3.6"))
     )
+    restored = store.restore_detector(detector)
+    LOG.info("Restored %s persisted anomaly-model observations", restored)
     start_http_server(int(os.getenv("WORKER_METRICS_PORT", "9100")))
     consumer.subscribe([topic])
     CONSUMER_UP.set(1)

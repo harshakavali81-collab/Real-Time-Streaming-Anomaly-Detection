@@ -9,5 +9,8 @@ def ingest(event: TelemetryEvent, store: Store, detector: OnlineDetector) -> tup
         return False, False
     begin = perf_counter()
     prediction = detector.score(event)
-    saved = store.save(event, prediction, (perf_counter()-begin)*1000)
+    saved = store.save(event, prediction)
+    if saved:
+        # Includes scoring and the first database commit; excludes timing update.
+        store.record_processing_latency(event.event_id, (perf_counter() - begin) * 1000)
     return saved, prediction.anomaly if saved else False
