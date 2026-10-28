@@ -12,7 +12,9 @@ LOG = logging.getLogger(__name__)
 def main() -> None:
     broker = os.getenv("KAFKA_BOOTSTRAP", "localhost:19092")
     topic = os.getenv("KAFKA_TOPIC", "telemetry.events.v1")
-    rate = max(.1, float(os.getenv("EVENTS_PER_SECOND", "5")))
+    rate = float(os.getenv("EVENTS_PER_SECOND", "5"))
+    if not 0 < rate <= 10000:
+        raise ValueError("EVENTS_PER_SECOND must be >0 and <=10000")
     anomaly_rate = float(os.getenv("SIMULATED_ANOMALY_RATE", "0.08"))
     producer = Producer({"bootstrap.servers": broker,
                          "client.id": "streamwatch-sim-producer",
@@ -27,8 +29,14 @@ def main() -> None:
             event = generate_event(sequence, anomaly_rate=anomaly_rate).model_copy(
                 update={"event_id": uuid.uuid4().hex}
             )
-            producer.produce(topic, key=event.service.encode(), value=event.model_dump_json().encode(),
-                             on_delivery=delivery)
+            while True:
+                try:
+                    producer.produce(topic, key=event.service.encode(),
+                                     value=event.model_dump_json().encode(),
+                                     on_delivery=delivery)
+                    break
+                except BufferError:
+                    producer.poll(.1)  # bounded retry under broker backpressure
             producer.poll(0)
             sequence += 1
             time.sleep(1.0 / rate)

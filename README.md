@@ -223,3 +223,12 @@ python -m scripts.retention --days 30 --execute
 ~~~
 
 CLI retention controls and the optional Grafana stack must be verified in the target operator environment before production use. The default application remains a synthetic-data engineering project.
+
+
+## More advanced engineering and hiring resources
+
+- [Streaming performance benchmark protocol](docs/PERFORMANCE_PLAN.md) — distinct broker acknowledgements, worker metrics and SQL persistence.
+- [Local Kafka producer load CLI](scripts/kafka_load.py) — controlled synthetic event rates with measured broker delivery percentiles.
+- [Threat model](docs/THREAT_MODEL.md) — key trust boundaries and release security gaps.
+- [Staging/production deployment blueprint](docs/DEPLOYMENT_BLUEPRINT.md) — explicit implementation/verification gates, **not** a claim of deployment.
+- [Recruiter demonstration checklist](docs/DEMO_CHECKLIST.md) — a practical, source-linked walkthrough.
