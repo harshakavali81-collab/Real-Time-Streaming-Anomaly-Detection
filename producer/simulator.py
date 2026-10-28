@@ -36,7 +36,7 @@ def generate_event(index: int, seed: int = 42, anomaly_rate: float = .08,
     now = base_time or datetime.now(timezone.utc)
     timestamp = now + timedelta(seconds=index * interval_seconds) if base_time else now
     return TelemetryEvent(
-        event_id=f"evt-{seed}-{index}", service=service, timestamp=timestamp,
+        event_id=f"evt-{seed:06d}-{index:08d}", service=service, timestamp=timestamp,
         latency_ms=round(x_latency, 3), cpu_pct=round(x_cpu, 3),
         error_rate=round(x_error, 5), rps=round(x_rps, 2),
         ground_truth=anomalous, source="simulator"
