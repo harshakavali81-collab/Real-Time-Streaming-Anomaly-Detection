@@ -1,0 +1,24 @@
+groups:
+  - name: streamwatch-local-alerts
+    rules:
+      - alert: StreamWatchConsumerAbsent
+        expr: absent(streamwatch_consumer_up) == 1
+        for: 1m
+        labels:
+          severity: warning
+        annotations:
+          summary: "StreamWatch worker metric is missing"
+      - alert: StreamWatchConsumerUnhealthy
+        expr: streamwatch_consumer_up == 0
+        for: 1m
+        labels:
+          severity: warning
+        annotations:
+          summary: "StreamWatch consumer is not running"
+      - alert: StreamWatchInvalidEventSurge
+        expr: sum(rate(streamwatch_invalid_total[5m])) > 0.05
+        for: 2m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Increased schema-invalid event volume"

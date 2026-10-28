@@ -29,7 +29,7 @@ Backend monitoring reads the SQL store, including minute trend buckets and p95 t
 | Kafka replay | Unique event ID prevents duplicate SQL rows | Durable model state for replay-safe learning |
 | Invalid event | DLQ then source acknowledgement | DLQ retention, privacy controls and human replay tools |
 | SQL outage | Processing fails, source offset not committed | Backoff, retry, incident monitors |
-| Consumer restart | Committed offsets resume; online baseline resets | Model snapshots / stateful streaming platform |
+| Consumer restart | Committed offsets resume; saved online model decisions are replayed from SQL to restore the baseline | Efficient model snapshots / stateful streaming platform for larger deployments |
 | Broker unreachable | Producer/consumer log errors | Strong reconnect and error budget policies |
 | Multiple workers | SQL IDs prevent repeated insertion but model profiles diverge | Partition-aligned state and coordinated rebalances |
 

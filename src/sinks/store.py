@@ -4,7 +4,7 @@ import time
 from collections import defaultdict
 from datetime import datetime, timezone
 from math import log1p
-from sqlalchemy import Boolean, Float, Index, Integer, JSON, String, create_engine, select, update, func
+from sqlalchemy import Boolean, Float, Index, Integer, JSON, String, create_engine, select, update, delete, func
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, sessionmaker
 from src.schema import TelemetryEvent
 from src.models.detector import Detection, OnlineDetector
@@ -150,6 +150,20 @@ class Store:
                      "new_status": a.new_status, "actor": a.actor,
                      "changed_at": datetime.fromtimestamp(a.changed_ts, timezone.utc).isoformat()}
                     for a in entries]
+
+    def prune_before(self, cutoff_epoch: float, execute: bool = False) -> dict:
+        """Safe-by-default retention; matching audit entries are deleted first."""
+        target_ids = select(EventRow.event_id).where(EventRow.stored_ts < cutoff_epoch)
+        with self.Session.begin() as session:
+            event_count = session.scalar(select(func.count()).select_from(EventRow)
+                                         .where(EventRow.stored_ts < cutoff_epoch)) or 0
+            audit_count = session.scalar(select(func.count()).select_from(AuditRow)
+                                         .where(AuditRow.event_id.in_(target_ids))) or 0
+            if execute and event_count:
+                session.execute(delete(AuditRow).where(AuditRow.event_id.in_(target_ids)))
+                session.execute(delete(EventRow).where(EventRow.stored_ts < cutoff_epoch))
+        return {"dry_run": not execute, "matching_events": int(event_count),
+                "matching_audit_records": int(audit_count)}
 
     def summary(self, window_minutes: int = 60) -> dict:
         since = time.time() - window_minutes * 60

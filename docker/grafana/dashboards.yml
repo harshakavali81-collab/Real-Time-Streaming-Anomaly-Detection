@@ -1,0 +1,11 @@
+apiVersion: 1
+providers:
+  - name: StreamWatch AI Dashboards
+    orgId: 1
+    folder: StreamWatch AI
+    folderUid: streamwatch
+    type: file
+    disableDeletion: true
+    allowUiUpdates: false
+    options:
+      path: /var/lib/grafana/dashboards

@@ -67,9 +67,11 @@ def main():
             if message is None or message.error():
                 return None
             payload = json.loads(message.value())
-            return payload if '"invalid"' in payload.get("payload", "") else None
+            return payload if payload.get("error_type") == "invalid_schema" and payload.get("payload_size_bytes") else None
         entry = wait_until(read_dlq, timeout=75, label="invalid Kafka event DLQ")
         assert entry["source_topic"] == "telemetry.events.v1"
+        assert "payload" not in entry
+        assert len(entry["payload_sha256"]) == 64
     finally:
         dlq.close()
 

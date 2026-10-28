@@ -1,0 +1,18 @@
+# Opt-in local Grafana; do not expose anonymous viewers publicly.
+# docker compose -f docker-compose.yml -f docker-compose.observability.yml up -d
+services:
+  grafana:
+    image: grafana/grafana:11.3.1
+    environment:
+      GF_USERS_ALLOW_SIGN_UP: 'false'
+      GF_AUTH_ANONYMOUS_ENABLED: 'true'
+      GF_AUTH_ANONYMOUS_ORG_ROLE: Viewer
+      GF_SECURITY_ADMIN_PASSWORD: local_demo_only
+    ports:
+      - "127.0.0.1:3000:3000"
+    volumes:
+      - "./docker/grafana/datasources.yml:/etc/grafana/provisioning/datasources/streamwatch.yml:ro"
+      - "./docker/grafana/dashboards.yml:/etc/grafana/provisioning/dashboards/streamwatch.yml:ro"
+      - "./docker/grafana/streamwatch.json:/var/lib/grafana/dashboards/streamwatch.json:ro"
+    depends_on:
+      - prometheus

@@ -63,7 +63,9 @@ services:
       api: {condition: service_started}
   prometheus:
     image: prom/prometheus:v2.55.1
-    volumes: ["./docker/prometheus.yml:/etc/prometheus/prometheus.yml:ro"]
+    volumes:
+      - "./docker/prometheus.yml:/etc/prometheus/prometheus.yml:ro"
+      - "./docker/alert_rules.yml:/etc/prometheus/alert_rules.yml:ro"
     ports: ["127.0.0.1:9090:9090"]
     depends_on: [consumer]
 volumes:

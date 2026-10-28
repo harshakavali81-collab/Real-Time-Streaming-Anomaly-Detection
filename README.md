@@ -189,3 +189,37 @@ Real-Time-Streaming-Anomaly-Detection/
 The current code delivers an inspectable, locally runnable and CI-testable portfolio project, not an enterprise security certification. Review [architecture](docs/ARCHITECTURE.md), [operational runbook](docs/RUNBOOK.md) and [security](docs/SECURITY.md).
 
 **Created by Kavali Harshavardhan** · [GitHub profile](https://github.com/harshakavali81-collab) · [Career portfolio](https://harshakavali81-collab.github.io/harshavardhan-portfolio/) · MIT license.
+
+
+## Release update — end-to-end broker verification and operational controls
+
+**Verified Docker integration:** [Successful broker-to-SQL smoke test](https://github.com/harshakavali81-collab/Real-Time-Streaming-Anomaly-Detection/actions/runs/40656391915) confirms Kafka-compatible message delivery, consumer persistence, duplicate-ID deduplication, invalid-message dead-letter routing and authenticated investigation audit. This is an actual **ephemeral container CI test**, not a production/cloud service or long-duration load benchmark.
+
+**New engineering additions:**
+
+- Restores in-memory model baselines at worker startup by replaying persisted model decisions from SQL (single-worker semantics; initial load proportional to historical events).
+- Tracks investigation status transitions durably in SQL, with token-class audit attribution.
+- Adds production-mode API token fail-closed startup and database readiness probe.
+- Avoids raw rejected payload text in dead-letter topic metadata; keeps field paths, payload byte size and SHA-256 digest instead.
+- Adds dry-run-first event/audit retention tooling.
+- Adds Prometheus local alert rules and optional provisioned Grafana observability charts.
+
+**Inspect:** [operations manual](docs/OPERATIONS.md) · [verified integration workflow](.github/workflows/streaming-integration.yml) · [CI evidence](docs/CI_EVIDENCE.md)
+
+### Optional Grafana + Prometheus alert rules
+
+~~~bash
+docker compose -f docker-compose.yml -f docker-compose.observability.yml up --build -d
+~~~
+
+Visit http://localhost:3000 for the **local-only** Grafana dashboard (anonymous viewer enabled solely in localhost demo configuration) or http://localhost:9090/alerts for Prometheus rule evaluation. No automatic external alerts/notifications are configured.
+
+### Retention dry run
+
+~~~bash
+python -m scripts.retention --days 30
+# WARNING: deletes matching stored events AND their related investigation history:
+python -m scripts.retention --days 30 --execute
+~~~
+
+CLI retention controls and the optional Grafana stack must be verified in the target operator environment before production use. The default application remains a synthetic-data engineering project.

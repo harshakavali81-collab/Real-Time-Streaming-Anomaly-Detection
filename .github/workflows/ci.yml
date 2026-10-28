@@ -21,6 +21,8 @@ jobs:
       - run: python -m src.demo --events 240 --db sqlite:///./ci_demo.db
       - run: python -m scripts.benchmark --events 250
       - run: docker compose config -q
+      - run: docker compose -f docker-compose.yml -f docker-compose.observability.yml config -q
+      - run: python -m json.tool docker/grafana/streamwatch.json > /dev/null
   frontend:
     runs-on: ubuntu-latest
     timeout-minutes: 10

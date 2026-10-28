@@ -38,3 +38,18 @@ GitHub Actions executed: python -m scripts.benchmark --events 250
 To publish full-stream metrics, run the complete Docker Compose stack with a pinned producer load and capture: broker ingress and consumer lag, persisted row counts, end-to-end p50/p95/p99 on clock-synchronized hosts, malformed-record DLQ counts, restart replay outcomes and real deployed monitoring logs. Rerun on independent seeds, drift patterns and authorized real-world labels before evaluating operational detection.
 
 Source references: [benchmark code](../scripts/benchmark.py), [tests](../tests), [evaluation methodology](EVALUATION.md), [model card](MODEL_CARD.md).
+
+
+## Full-stream integration evidence
+
+[GitHub Actions docker-streaming-integration run #40656391915](https://github.com/harshakavali81-collab/Real-Time-Streaming-Anomaly-Detection/actions/runs/40656391915) **succeeded** on the 28 October 2026 source revision 4e969ed0f5c6ea4c961c15aba1144baf3dff713e. It ran an actual local ephemeral Redpanda broker, synthetic producer, Python worker, PostgreSQL, FastAPI and Prometheus, and validated:
+
+- API/database readiness and at least 45 broker-sourced SQL events.
+- Two duplicate-ID Kafka messages resulted in one persisted event.
+- An invalid JSON-schema message appeared on the Kafka dead-letter topic.
+- Token-authorized investigation changed an alert status and persisted an audit entry.
+- All services were torn down in the CI runner.
+
+This confirms a finite integration smoke under a simulated payload distribution. It does **not** establish high availability, sustained Kafka throughput or validated accuracy on real service incidents.
+
+Later commits change DLQ privacy format and add optional Grafana; those changes require their own workflow verification rather than inheriting the earlier run's status.

@@ -14,7 +14,7 @@ Flag unusual service telemetry for **human review**, not a proven outage or secu
 - Score: maximum absolute feature z-score; alert threshold 3.6.
 - Leading deviating feature included as an investigation reason.
 - Flagged outliers are excluded from normal baseline updates.
-- State lives in worker memory; it is not durable across restarts.
+- Worker state is reconstructed from committed SQL event decisions at startup. Restoration requires a single-worker, version-compatible ordered history; it is not a distributed state-store checkpoint.
 
 ## Optional Isolation Forest experiment
 
@@ -28,4 +28,4 @@ Compare synthetic precision, recall, false alarm rate and alert prevalence acros
 
 ## Risks
 
-Concept drift, seasonal change, batch effects, untrustworthy labels, warmup false negatives, alert fatigue, noisy low-variance features and adversarial inputs are unaddressed. Educational statistical baseline only.
+Model restoration scales linearly with stored history. Concept drift, seasonal change, batch effects, untrustworthy labels, warmup false negatives, alert fatigue, noisy low-variance features and adversarial inputs are unaddressed. Educational statistical baseline only.

@@ -33,3 +33,16 @@ The benchmark is single-process in-memory SQLite, **not** Kafka throughput. For 
 ## Safe shutdown
 
 docker compose down keeps volumes. docker compose down -v destroys *all local broker and SQL demo state*. Never use destructive commands on a production environment.
+
+
+## New operational workflows
+
+[Operations guide](OPERATIONS.md) documents the actual Docker integration smoke, redacted dead-letter records, startup model-state restore, Grafana observability and retention. Example on a local workstation with the API_TOKEN configured in both Compose and the shell:
+
+~~~bash
+python -m scripts.smoke
+python -m scripts.retention --days 30
+docker compose -f docker-compose.yml -f docker-compose.observability.yml up --build -d
+~~~
+
+The default Python quality workflow verifies unit and offline checks; the separate integration workflow runs the broker, SQL database and API as containers. See [successful integration run](https://github.com/harshakavali81-collab/Real-Time-Streaming-Anomaly-Detection/actions/runs/40656391915).

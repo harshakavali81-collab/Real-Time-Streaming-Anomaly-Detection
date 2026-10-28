@@ -9,6 +9,7 @@ from src.models.detector import OnlineDetector
 from src.monitoring.metrics import PROCESSED, ANOMALIES, INVALID, INFERENCE, CONSUMER_UP
 from src.schema import TelemetryEvent
 from src.service import ingest
+from src.alerts.dlq import quarantine_record
 from src.sinks.store import Store
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(message)s")
@@ -50,9 +51,7 @@ def run() -> None:
                 event = TelemetryEvent.model_validate_json(msg.value())
             except (ValidationError, ValueError) as err:
                 # Never acknowledge malformed payloads unless DLQ delivery succeeded.
-                result = {"source_topic": topic, "partition": msg.partition(),
-                          "offset": msg.offset(), "error": str(err)[:300],
-                          "payload": msg.value().decode("utf-8", errors="replace")[:1000]}
+                result = quarantine_record(msg, err)
                 failures = []
                 publisher.produce(dlq, value=json.dumps(result).encode(),
                                   on_delivery=lambda error, _: failures.append(str(error)) if error else None)
